@@ -70,6 +70,7 @@
 //! # }
 //! ```
 
+#![cfg_attr(feature = "__unified-test-runner", allow(dead_code, unused_imports))]
 #![cfg_attr(
     feature = "cargo-clippy",
     allow(
@@ -121,10 +122,10 @@ define_if_single_runtime_enabled! {
     #[cfg(any(feature = "sync", docsrs))]
     #[cfg_attr(docsrs, doc(cfg(feature = "sync")))]
     pub mod sync;
-    #[cfg(test)]
+    #[cfg(any(test, feature = "__unified-test-runner"))]
     mod test;
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "__unified-test-runner"))]
     #[macro_use]
     extern crate derive_more;
 
@@ -143,6 +144,9 @@ define_if_single_runtime_enabled! {
         cursor::Cursor,
         db::Database,
     };
+
+    #[cfg(feature = "__unified-test-runner")]
+    pub use crate::test::run_unified_format_test;
 
     pub use coll::Namespace;
 }

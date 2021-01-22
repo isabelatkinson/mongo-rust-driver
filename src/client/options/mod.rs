@@ -836,7 +836,7 @@ impl ClientOptions {
         Ok(options)
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "__unified-test-runner"))]
     pub(crate) fn parse_without_srv_resolution(s: &str) -> Result<Self> {
         let parser = ClientOptionsParser::parse(s)?;
         let options: Self = parser.into();
@@ -875,7 +875,7 @@ impl ClientOptions {
     }
 
     /// Applies the options in other to these options if a value is not already present
-    #[cfg(test)]
+    #[cfg(any(test, feature = "__unified-test-runner"))]
     pub(crate) fn merge(&mut self, other: ClientOptions) {
         merge_options!(
             other,

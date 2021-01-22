@@ -43,7 +43,7 @@ macro_rules! resolve_options {
 }
 
 /// Merges the options from src into dst.
-#[cfg(test)]
+#[cfg(any(test, feature = "__unified-test-runner"))]
 macro_rules! merge_options {
     ($src:expr, $dst:expr, [$( $field:ident ),+] ) => {
         $(

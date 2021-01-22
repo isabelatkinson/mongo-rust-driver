@@ -79,7 +79,7 @@ impl AsyncRuntime {
     /// Run a future in the foreground, blocking on it completing.
     ///
     /// This will panic if called from a sychronous context when tokio is being used.
-    #[cfg(any(feature = "sync", test))]
+    #[cfg(any(feature = "sync", test, feature = "__unified-test-runner"))]
     pub(crate) fn block_on<F, T>(self, fut: F) -> T
     where
         F: Future<Output = T> + Send,

@@ -9,6 +9,9 @@ mod documentation_examples;
 mod spec;
 mod util;
 
+#[cfg(feature = "__unified-test-runner")]
+pub use spec::run_unified_format_test;
+
 pub(crate) use self::{
     spec::{
         run_spec_test,

@@ -56,7 +56,7 @@ impl PoolGenerationSubscriber {
         self.receiver.borrow().generation
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "__unified-test-runner"))]
     pub(crate) async fn wait_for_generation_change(
         &mut self,
         timeout: std::time::Duration,

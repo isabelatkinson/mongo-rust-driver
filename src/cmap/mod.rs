@@ -1,4 +1,4 @@
-#[cfg(test)]
+#[cfg(any(test, feature = "__unified-test-runner"))]
 pub(crate) mod test;
 
 pub(crate) mod conn;
