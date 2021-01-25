@@ -12,10 +12,7 @@ mod read_write_concern;
 mod retryable_reads;
 mod retryable_writes;
 mod runner;
-mod unified_runner;
-
-#[cfg(feature = "__unified-test-runner")]
-pub use unified_runner::run_unified_format_test;
+pub mod unified_runner;
 
 use std::{
     convert::TryFrom,

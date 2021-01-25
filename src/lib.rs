@@ -70,7 +70,6 @@
 //! # }
 //! ```
 
-#![cfg_attr(feature = "__unified-test-runner", allow(dead_code, unused_imports))]
 #![cfg_attr(
     feature = "cargo-clippy",
     allow(
@@ -81,6 +80,7 @@
 )]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![cfg_attr(test, type_length_limit = "80000000")]
+#![cfg_attr(feature = "__unified-test-runner", allow(dead_code, unused_imports))]
 
 macro_rules! define_if_single_runtime_enabled {
     ( $( $def:item )+ ) => {

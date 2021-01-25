@@ -6,11 +6,11 @@ mod coll;
 mod cursor;
 mod db;
 mod documentation_examples;
+#[cfg(feature = "__unified-test-runner")]
+pub mod spec;
+#[cfg(not(feature = "__unified-test-runner"))]
 mod spec;
 mod util;
-
-#[cfg(feature = "__unified-test-runner")]
-pub use spec::run_unified_format_test;
 
 pub(crate) use self::{
     spec::{
