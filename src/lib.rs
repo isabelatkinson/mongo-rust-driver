@@ -147,9 +147,6 @@ define_if_single_runtime_enabled! {
         db::Database,
     };
 
-    #[cfg(feature = "__unified-test-runner")]
-    pub use crate::test::run_unified_format_test;
-
     pub use coll::Namespace;
 }
 
