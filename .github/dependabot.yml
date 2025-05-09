@@ -4,8 +4,6 @@ updates:
     directory: /
     schedule:
       interval: weekly
-    reviewers:
-      - "mongodb/dbx-rust"
     # Update all dependencies in a single PR.
     groups:
       rust-dependencies:
