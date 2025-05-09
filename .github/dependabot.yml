@@ -6,9 +6,6 @@ updates:
       interval: weekly
     reviewers:
       - "mongodb/dbx-rust"
-    # Only bump to the latest version compatible with the dependency's version
-    # in Cargo.toml. This is the equivalent of running `cargo update`.
-    versioning-strategy: lockfile-only
     # Update all dependencies in a single PR.
     groups:
       rust-dependencies:
@@ -19,3 +16,5 @@ updates:
       - dependency-type: all
     ignore:
       - dependency-name: "mongocrypt-sys"
+      - update-types:
+        - version-update:semver-major
