@@ -17,3 +17,5 @@ updates:
     # Include transitive dependencies.
     allow:
       - dependency-type: all
+    ignore:
+      - dependency-name: "mongocrypt-sys"
