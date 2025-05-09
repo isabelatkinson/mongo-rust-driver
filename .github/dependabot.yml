@@ -16,5 +16,5 @@ updates:
       - dependency-type: all
     ignore:
       - dependency-name: "mongocrypt-sys"
-      - update-types:
-        - version-update:semver-major
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
