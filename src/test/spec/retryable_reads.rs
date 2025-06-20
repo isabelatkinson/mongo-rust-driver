@@ -219,6 +219,7 @@ async fn retry_read_different_mongos() {
 async fn test_4() {
     let mut options = get_client_options().await.clone();
     options.hosts.drain(2..);
+    options.local_threshold = Some(Duration::from_secs(60));
 
     let mut guards = Vec::new();
     for i in [0, 1] {
