@@ -3,7 +3,7 @@ use std::{future::IntoFuture, time::Duration};
 use crate::bson::doc;
 
 use crate::{
-    error::Result,
+    error::{Result, RETRYABLE_WRITE_ERROR},
     event::{
         cmap::{CmapEvent, ConnectionCheckoutFailedReason},
         command::CommandEvent,
@@ -213,6 +213,46 @@ async fn retry_read_different_mongos() {
     );
 
     drop(guards); // enforce lifetime
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_4() {
+    let mut options = get_client_options().await.clone();
+    options.hosts.drain(2..);
+
+    let mut guards = Vec::new();
+    for i in [0, 1] {
+        let mut options = options.clone();
+        options.hosts.remove(i);
+        options.direct_connection = Some(true);
+        let client = Client::with_options(options).unwrap();
+
+        let fail_point = FailPoint::fail_command(&["insert"], FailPointMode::Times(1))
+            .error_code(6)
+            .error_labels([RETRYABLE_WRITE_ERROR]);
+        guards.push(client.enable_fail_point(fail_point).await.unwrap());
+    }
+
+    let client = Client::for_test().options(options).monitor_events().await;
+    let buffer = &client.events;
+
+    client
+        .database("db")
+        .collection("coll")
+        .insert_one(doc! { "x": 1 })
+        .await
+        .unwrap_err();
+
+    let failed_events = buffer.get_command_events(&["insert"]);
+    assert_eq!(failed_events.len(), 4);
+
+    let first_failed = failed_events[1].as_command_failed().unwrap();
+    let first_address = &first_failed.connection.address;
+
+    let second_failed = failed_events[3].as_command_failed().unwrap();
+    let second_address = &second_failed.connection.address;
+
+    assert_ne!(first_address, second_address);
 }
 
 // Retryable Reads Are Retried on the Same mongos if No Others are Available
