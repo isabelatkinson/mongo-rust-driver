@@ -497,6 +497,10 @@ impl Client {
                 } else {
                     criteria
                 };
+            if operation_name == "insert" {
+                let servers = state.servers();
+                dbg!("current servers: {}", servers);
+            }
             let result = server_selection::attempt_to_select_server(
                 effective_criteria,
                 &state.description,

@@ -164,7 +164,6 @@ impl TopologyDescription {
     }
 
     fn retain_servers_within_latency_window(&self, suitable_servers: &mut Vec<&ServerDescription>) {
-        dbg!("suitable servers: {}", &suitable_servers);
         let shortest_average_rtt = suitable_servers
             .iter()
             .filter_map(|server_desc| server_desc.average_round_trip_time)
