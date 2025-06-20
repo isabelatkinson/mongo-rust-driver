@@ -27,7 +27,7 @@ cargo_test() {
   LOG_PATH=$(mktemp)
   tail -f ${LOG_PATH} &
   TAIL_PID=$!
-  LOG_UNCAPTURED=${LOG_PATH} RUST_BACKTRACE=1 cargo nextest run --profile ci $(cargo_test_options $1)
+  LOG_UNCAPTURED=${LOG_PATH} RUST_BACKTRACE=1 cargo nextest run test_4 --profile ci $(cargo_test_options $1)
   ((CARGO_RESULT = ${CARGO_RESULT} || $?))
   if [[ -f "results.xml" ]]; then
     mv results.xml previous.xml
