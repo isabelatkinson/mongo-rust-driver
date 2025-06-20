@@ -237,6 +237,8 @@ async fn test_4() {
     let client = Client::for_test().options(options).monitor_events().await;
     let buffer = &client.events;
 
+    tokio::time::sleep(Duration::from_secs(5)).await;
+
     let result = client
         .database("db")
         .collection("coll")
