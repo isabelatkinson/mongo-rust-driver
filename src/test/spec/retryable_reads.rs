@@ -1,4 +1,4 @@
-use std::{future::IntoFuture, time::Duration};
+use std::{future::IntoFuture, sync::Arc, time::Duration};
 
 use crate::bson::doc;
 
@@ -8,6 +8,7 @@ use crate::{
         cmap::{CmapEvent, ConnectionCheckoutFailedReason},
         command::CommandEvent,
     },
+    options::SelectionCriteria,
     runtime::{self, AsyncJoinHandle},
     test::{
         block_connection_supported,
@@ -219,32 +220,29 @@ async fn retry_read_different_mongos() {
 async fn test_4() {
     let mut options = get_client_options().await.clone();
     options.hosts.drain(2..);
-    options.local_threshold = Some(Duration::from_secs(60));
+    let hosts = options.hosts.clone();
+    let client = Client::for_test().options(options).monitor_events().await;
 
     let mut guards = Vec::new();
-    for i in [0, 1] {
-        let mut options = options.clone();
-        options.hosts.remove(i);
-        options.direct_connection = Some(true);
-        let client = Client::with_options(options).unwrap();
-
+    for address in hosts {
+        let address = address.clone();
         let fail_point = FailPoint::fail_command(&["insert"], FailPointMode::Times(1))
             .error_code(6)
-            .error_labels([RETRYABLE_WRITE_ERROR]);
+            .error_labels([RETRYABLE_WRITE_ERROR])
+            .selection_criteria(SelectionCriteria::Predicate(Arc::new(move |info| {
+                info.description.address == address
+            })));
         guards.push(client.enable_fail_point(fail_point).await.unwrap());
     }
 
-    let client = Client::for_test().options(options).monitor_events().await;
     let buffer = &client.events;
 
-    tokio::time::sleep(Duration::from_secs(5)).await;
-
-    let result = client
+    client
         .database("db")
         .collection("coll")
         .insert_one(doc! { "x": 1 })
-        .await;
-    assert!(result.is_err());
+        .await
+        .unwrap_err();
 
     let failed_events = buffer.get_command_events(&["insert"]);
     assert_eq!(failed_events.len(), 4);
