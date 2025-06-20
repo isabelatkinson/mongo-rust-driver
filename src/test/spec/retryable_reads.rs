@@ -219,13 +219,11 @@ async fn retry_read_different_mongos() {
 async fn test_4() {
     let mut options = get_client_options().await.clone();
     options.hosts.drain(2..);
-    dbg!("hosts: {}", &options.hosts);
 
     let mut guards = Vec::new();
     for i in [0, 1] {
         let mut options = options.clone();
         options.hosts.remove(i);
-        dbg!("hosts after removal: {}", &options.hosts);
         options.direct_connection = Some(true);
         let client = Client::with_options(options).unwrap();
 
@@ -243,10 +241,6 @@ async fn test_4() {
         .collection("coll")
         .insert_one(doc! { "x": 1 })
         .await;
-
-    let insert_events = buffer.get_command_events(&["insert"]);
-    dbg!("{}", &insert_events);
-
     assert!(result.is_err());
 
     let failed_events = buffer.get_command_events(&["insert"]);
