@@ -1,6 +1,6 @@
 use std::io::Read;
 
-use crate::bson::{doc, Array, Document};
+use crate::bson::{Array, Document, doc};
 use bitflags::bitflags;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
@@ -14,7 +14,7 @@ use crate::{
     bson::RawDocumentBuf,
     bson_util,
     checked::Checked,
-    cmap::{conn::wire::util::SyncCountReader, Command},
+    cmap::{Command, conn::wire::util::SyncCountReader},
     compression::decompress::decompress_message,
     error::{Error, ErrorKind, Result},
     runtime::SyncLittleEndianRead,
@@ -362,6 +362,7 @@ impl Message {
         writer.write_u8(compressor.id()).await?;
         writer.write_all(compressed_bytes.as_slice()).await?;
 
+        dbg!("hi");
         writer.flush().await?;
 
         Ok(())
