@@ -653,6 +653,83 @@ async fn top_level_error_after_write_errors() {
     assert!(!bulk_write_error.write_errors.is_empty());
 }
 
+#[tokio::test(flavor = "multi_thread")]
+async fn top_level_error_after_write_errors_in_previous_batch() {
+    require_8_0!("top_level_error_after_write_errors_in_previous_batch");
+
+    let mut options = get_client_options().await.clone();
+    options.retry_writes = Some(false);
+    let client = Client::for_test()
+        .options(options)
+        .use_single_mongos()
+        .monitor_events()
+        .await;
+
+    let max_write_batch_size = get_max_write_batch_size().await;
+    let max_bson_object_size = get_max_bson_object_size().await;
+
+    let fail_point = FailPoint::fail_command(&["getMore"], FailPointMode::Times(1)).error_code(8);
+    let _guard = client.enable_fail_point(fail_point).await.unwrap();
+
+    let coll = client
+        .database("db")
+        .collection::<Document>("top_level_error_after_write_errors_in_previous_batch");
+    coll.drop().await.unwrap();
+
+    let mut models: Vec<WriteModel> = Vec::new();
+
+    // First batch: partial results and duplicate key error
+    models.extend(vec![
+        coll.insert_one_model(doc! { "_id": 1 }).unwrap().into();
+        2
+    ]);
+    models.extend(vec![
+        coll.insert_one_model(doc! {}).unwrap().into();
+        max_write_batch_size - 2
+    ]);
+
+    // Second batch: partial results and getMore error
+    models.extend([
+        UpdateOneModel::builder()
+            .namespace(coll.namespace())
+            .filter(doc! { "_id": "a".repeat(max_bson_object_size / 2) })
+            .update(doc! { "$set": { "x": 1 } })
+            .upsert(true)
+            .build()
+            .into(),
+        UpdateOneModel::builder()
+            .namespace(coll.namespace())
+            .filter(doc! { "_id": "b".repeat(max_bson_object_size / 2) })
+            .update(doc! { "$set": { "x": 1 } })
+            .upsert(true)
+            .build()
+            .into(),
+    ]);
+    models.extend(vec![
+        coll.insert_one_model(doc! {}).unwrap().into();
+        max_write_batch_size - 2
+    ]);
+
+    // Third batch: should not be executed due to top-level error
+    models.push(coll.insert_one_model(doc! {}).unwrap().into());
+
+    let error = client
+        .bulk_write(models)
+        .ordered(false)
+        .verbose_results()
+        .await
+        .unwrap_err();
+
+    let source = error.source.as_ref().unwrap();
+    assert_eq!(source.code(), Some(8));
+
+    let bulk_write_error = error.get_bulk_write_error();
+    assert_eq!(bulk_write_error.write_errors.len(), 1);
+
+    let events = client.events.get_command_started_events(&["bulkWrite"]);
+    assert_eq!(events.len(), 2);
+}
+
 // CRUD prose test 21
 #[tokio::test(flavor = "multi_thread")]
 async fn write_concern_error_not_top_level() {
